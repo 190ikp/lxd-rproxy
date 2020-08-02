@@ -1,0 +1,54 @@
+config: {}
+cluster: null
+networks:
+- name: lxdbr0
+  type: bridge
+  config:
+    ipv4.address: auto
+    ipv6.address: none
+  description: "LXD bridge interface"
+  managed: false
+storage_pools:
+- name: storage_pool
+  driver: $STORAGE_DRIVER
+  config:
+    source: $STORAGE_SOURCE
+profile:
+- name: proxy
+  description: "profile for reverse proxy container"
+  devices:
+    http_proxy:
+      bind: host
+      connect: tcp:127.0.0.1:80
+      listen: tcp:0.0.0.0:80
+      type: proxy
+    https_proxy:
+      bind: host
+      connect: tcp:127.0.0.1:443
+      listen: tcp:0.0.0.0:443
+      type: proxy
+    eth0:
+      name: eth0
+      nictype: bridged
+      parent: lxdbr0
+      type: nic
+    storage:
+      path: /
+      pool: storage_pool
+      type: disk
+  config:
+    environment.TZ: Asia/Tokyo
+- name: app
+  description: "profile for application container"
+  devices:
+    eth0:
+      name: eth0
+      nictype: bridged
+      parent: lxdbr0
+      type: nic
+    storage:
+      path: /
+      pool: storage_pool
+      type: disk
+  config:
+    environment.TZ: Asia/Tokyo
